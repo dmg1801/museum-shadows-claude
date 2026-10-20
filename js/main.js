@@ -1,4 +1,5 @@
 'use strict';
+const COARSE=matchMedia('(pointer:coarse)').matches,GW=COARSE?320:640,GH=COARSE?Math.min(460,Math.max(360,Math.round(GW*(innerHeight-(innerHeight>innerWidth?150:96))/innerWidth))):360,T0=360-GH,FX=GW/640;
 const S={lv:0,cp:null,got:{},lev:{}},K={jx:0,j:0,act:0,fl:0},keys={};
 const HALLS=[
 {n:'HALL I · IBERIAN',p:['Iberian lady bust, inspired by the Dama de Elche. 4th c. BC.','Altar of the forgotten priests. Do not look for them.','Stone guardian. It was not always stone.']},
@@ -21,12 +22,9 @@ relic(){[660,880,1320].forEach((f,i)=>this.t(f,.4,'triangle',.15,0,i*.09))},chim
 /* ---------- input ---------- */
 addEventListener('keydown',e=>{keys[e.code]=1;if(e.code=='KeyE')K.act=1;if(e.code=='KeyF')K.fl=1;if(e.code.startsWith('Arrow')||e.code=='Space')e.preventDefault();A.init()});
 addEventListener('keyup',e=>keys[e.code]=0);
-(()=>{const $=i=>document.getElementById(i),jz=$('joy'),kn=$('knob');
- const jm=e=>{const t=e.targetTouches[0];if(!t)return;const r=jz.getBoundingClientRect();K.jx=Math.max(-1,Math.min(1,(t.clientX-r.left-r.width/2)/(r.width/2)));kn.style.transform=`translate(${K.jx*35}px,0)`};
- jz.addEventListener('touchstart',e=>{e.preventDefault();A.init();jm(e)},{passive:false});jz.addEventListener('touchmove',e=>{e.preventDefault();jm(e)},{passive:false});
- jz.addEventListener('touchend',()=>{K.jx=0;kn.style.transform=''});
- const bt=(id,dn,up)=>{const b=$(id);b.addEventListener('touchstart',e=>{e.preventDefault();A.init();dn()},{passive:false});b.addEventListener('touchend',e=>{e.preventDefault();up&&up()},{passive:false})};
- bt('bJ',()=>K.j=1,()=>K.j=0);bt('bA',()=>K.act=1);bt('bL',()=>K.fl=1)})();
+(()=>{const $=i=>document.getElementById(i);
+ const bt=(id,dn,up)=>{const b=$(id);b.addEventListener('touchstart',e=>{e.preventDefault();A.init();dn()},{passive:false});['touchend','touchcancel'].forEach(ev=>b.addEventListener(ev,e=>{e.preventDefault();up&&up()},{passive:false}))};
+ bt('bLf',()=>K.l=1,()=>K.l=0);bt('bRt',()=>K.r=1,()=>K.r=0);bt('bJ',()=>K.j=1,()=>K.j=0);bt('bA',()=>K.act=1);bt('bL',()=>K.fl=1)})();
 /* ---------- procedural pixel art ---------- */
 function mk(s){const T=s.textures;if(T.exists('px'))return;const g=s.make.graphics({add:false}),
  gt=(k,w,h,f)=>{g.clear();f();g.generateTexture(k,w,h)},F=(c,a=1)=>g.fillStyle(c,a),R=(x,y,w,h)=>g.fillRect(x,y,w,h);
@@ -59,22 +57,22 @@ function mk(s){const T=s.textures;if(T.exists('px'))return;const g=s.make.graphi
 class Main extends Phaser.Scene{
 constructor(){super('m')}
 create(){mk(this);const s=this,lv=S.lv,hall=lv<4;
- Object.assign(s,{lock:false,dead:false,tm:0,cd:0,ft:0,wh:9000,ia:0,on:true,dir:1,sanity:100,msgT:0,W:hall?1800:640,cs:[],rel:[],en:[],pl:[],beams:[]});
- s.cameras.main.fadeIn(700);s.physics.world.setBounds(0,0,s.W,360);s.cameras.main.setBounds(0,0,s.W,360);
+ Object.assign(s,{lock:false,dead:false,tm:0,cd:0,ft:0,wh:9000,ia:0,on:true,dir:1,sanity:100,msgT:0,W:hall?1800:GW,cs:[],rel:[],en:[],pl:[],beams:[]});
+ s.cameras.main.fadeIn(700);s.physics.world.setBounds(0,T0,s.W,GH);s.cameras.main.setBounds(0,T0,s.W,GH);
  s.sol=s.physics.add.staticGroup();
  s.plat=(x,y,w,h,ow,tn)=>{const o=s.sol.create(x,y,'px').setDisplaySize(w,h).refreshBody();if(tn)o.setTint(tn);else o.setVisible(false);if(ow)o.body.checkCollision.down=o.body.checkCollision.left=o.body.checkCollision.right=false;return o};
  s.plat(s.W/2,345,s.W,30);
  s.cameras.main.setBackgroundColor(hall?0x16223d:0);
  [s.hallBuild,s.giza,s.office][hall?0:lv-3].call(s);
  const sp=S.cp&&S.cp.lv==lv?S.cp:{x:40};
- s.p=s.physics.add.sprite(lv==5?90:sp.x,300,'guard',0).setDepth(10).setCollideWorldBounds(true);s.p.body.setSize(10,22).setOffset(3,2);
+ s.p=s.physics.add.sprite(lv==5?90*FX:sp.x,300,'guard',0).setDepth(10).setCollideWorldBounds(true);s.p.body.setSize(10,22).setOffset(3,2);
  s.physics.add.collider(s.p,s.sol);s.cameras.main.startFollow(s.p,true,.1,.1);
- s.dust=[...Array(30)].map(()=>s.add.image(Math.random()*640,Math.random()*340,'px').setAlpha(.35).setScale(.5).setDepth(8).setData('v',[Math.random()*8-4,Math.random()*4-1]));
+ s.dust=[...Array(30)].map(()=>s.add.image(Math.random()*GW,T0+Math.random()*(345-T0),'px').setAlpha(.35).setScale(.5).setDepth(8).setData('v',[Math.random()*8-4,Math.random()*4-1]));
  s.hud=s.add.graphics().setScrollFactor(0).setDepth(100);
  const ts={fontFamily:'monospace',fontSize:'10px',color:'#cfe3ff'};
  s.tx=s.add.text(8,4,'',ts).setScrollFactor(0).setDepth(101).setResolution(2);
- s.rt_=s.add.text(632,4,'',ts).setOrigin(1,0).setScrollFactor(0).setDepth(101).setResolution(2);
- s.msg=s.add.text(320,330,'',{...ts,align:'center',wordWrap:{width:600},backgroundColor:'#000a'}).setOrigin(.5,1).setScrollFactor(0).setDepth(101).setResolution(2);
+ s.rt_=s.add.text(GW-8,4,'',ts).setOrigin(1,0).setScrollFactor(0).setDepth(101).setResolution(2);
+ s.msg=s.add.text(GW/2,GH-30,'',{...ts,align:'center',wordWrap:{width:GW-20},backgroundColor:'#000a'}).setOrigin(.5,1).setScrollFactor(0).setDepth(101).setResolution(2);
  if(lv==5){s.time.delayedCall(1500,()=>s.say('"It was all a dream..." *laughs nervously*',4000));s.time.delayedCall(5500,()=>s.say('Maybe I should wash my face... (restroom →)',5000))}
  if(hall)s.say(lv==0?'Touch relics to collect them · E: read plaques · F: flashlight':'Find 3 relic fragments',5000)}
 say(m,ms=4000){this.msg.setText(m);this.msgT=this.tm+ms}
@@ -92,23 +90,24 @@ hallBuild(){const s=this,lv=S.lv,h=HALLS[lv],W=1800,g=s.add.graphics().setDepth(
  [[470,223],[920,183],[1520,183]].forEach(([x,y],i)=>{if(S.got[lv+'-'+i])return;s.rel.push({i,x,y,o:s.add.image(x,y,'relic').setDepth(5)})});
  s.door=s.add.image(W-50,330,'door').setOrigin(.5,1).setDepth(2);
  [500,850,1150,1450].forEach((x,i)=>s.en.push(Object.assign(s.add.image(x,300,'e'+lv).setDepth(9).setScale(1.3),{bx:x,sp:.6+i*.15,st:0})));
- s.rt=s.add.renderTexture(0,0,640,360).setOrigin(0,0).setScrollFactor(0).setDepth(50);s.lg=s.make.graphics({add:false})}
-giza(){const s=this,g=s.add.graphics();s.cameras.main.setBackgroundColor(0x050a1c);
- for(let i=0;i<130;i++)g.fillStyle(0xffffff,Math.random()).fillRect(Math.random()*640,Math.random()*230,1,1);
+ s.rt=s.add.renderTexture(0,0,GW,GH).setOrigin(0,0).setScrollFactor(0).setDepth(50);s.lg=s.make.graphics({add:false})}
+giza(){const s=this,g=s.add.graphics().setScale(FX,1);s.cameras.main.setBackgroundColor(0x050a1c);
+ for(let i=0;i<130;i++)g.fillStyle(0xffffff,Math.random()).fillRect(Math.random()*640,T0+Math.random()*(230-T0),1,1);
  g.fillStyle(0xe8f0ff).fillCircle(540,60,26);g.fillStyle(0xaab8d8).fillCircle(532,54,6).fillCircle(548,68,4);
  g.fillStyle(0x1c2a4a).fillTriangle(60,330,260,80,460,330);g.fillStyle(0x16223e).fillTriangle(260,80,460,330,330,330);
  g.fillStyle(0x2a3550).fillRect(0,330,640,30);
  g.fillStyle(0x3a4668).fillRect(470,305,110,25).fillRect(560,300,20,30).fillRect(480,262,26,45).fillRect(466,322,40,8);
- s.eyes=s.add.graphics();s.lock=true;
+ s.eyes=s.add.graphics().setScale(FX,1);s.lock=true;
+ s.time.delayedCall(100,()=>s.msg.setOrigin(.5,0).setY(16));
  s.time.delayedCall(1500,()=>{s.eyes.fillStyle(0xffd860).fillRect(494,272,4,3);s.cameras.main.shake(900,.006);A.moan();A.chime();
   s.say('SPHINX: "Congratulations, Guardian.\nYou have restored the Fragments of Narmer\'s Sacred Scarab.\nThe ancient king shall continue protecting the world from beyond the veil."',10000)});
  s.time.delayedCall(10500,()=>s.cameras.main.fade(2500,255,255,255));
  s.time.delayedCall(13200,()=>{S.lv=5;s.scene.restart()})}
-office(){const s=this,g=s.add.graphics();s.cameras.main.setBackgroundColor(0x1b2238);
+office(){const s=this,g=s.add.graphics().setScale(FX,1);s.cameras.main.setBackgroundColor(0x1b2238);
  g.fillStyle(0x141a2c).fillRect(0,300,640,60).fillStyle(0xc8dcff,.5).fillRect(250,50,80,100).fillStyle(0x141a2c).fillRect(288,50,4,100);
  g.fillStyle(0x4a3a2a).fillRect(60,298,60,6).fillRect(66,304,4,26).fillRect(110,304,4,26).fillStyle(0x7ab0ff).fillRect(76,278,24,20);
  g.fillStyle(0x3a4a6a).fillRect(520,230,90,100).fillStyle(0xc0c8d8).fillRect(555,258,20,8);
- s.add.text(565,236,'WC',{fontFamily:'monospace',fontSize:'10px',color:'#fff'}).setOrigin(.5);
+ s.add.text(565*FX,236,'WC',{fontFamily:'monospace',fontSize:'10px',color:'#fff'}).setOrigin(.5);
  s.sand=s.add.graphics().setDepth(11)}
 tick(t,dt){const s=this,p=s.p,n=s.count();let near=0,lit=false;
  const cam=s.cameras.main,sx=cam.scrollX,sy=cam.scrollY;
@@ -138,24 +137,24 @@ tick(t,dt){const s=this,p=s.p,n=s.count();let near=0,lit=false;
 interact(){const s=this,p=s.p;s.ia=s.tm+250;const pl=s.pl.find(q=>Math.abs(q.x-p.x)<30);if(pl)s.say(pl.t,5000)}
 collect(r){const s=this,n=s.count();S.got[S.lv+'-'+r.i]=1;r.o.destroy();s.rel.splice(s.rel.indexOf(r),1);A.relic();s.say('Relic fragment collected ('+(n+1)+'/3)');if(n+1==3){A.creak();s.say('The magical door at the end of the hall opens!',5000)}}
 die(){const s=this;if(s.dead)return;s.dead=true;s.lock=true;A.moan();
- s.add.text(320,180,'The Museum Claims Another Soul',{fontFamily:'monospace',fontSize:'18px',color:'#ff8a8a'}).setOrigin(.5).setScrollFactor(0).setDepth(200).setResolution(2);
+ s.add.text(GW/2,GH/2,'The Museum Claims Another Soul',{fontFamily:'monospace',fontSize:COARSE?'14px':'18px',color:'#ff8a8a'}).setOrigin(.5).setScrollFactor(0).setDepth(200).setResolution(2);
  s.cameras.main.fade(2500,0,0,0);s.time.delayedCall(2600,()=>s.scene.restart())}
 update(t,d){const s=this,p=s.p,dt=d/1000;s.tm=t;const act=K.act,fl=K.fl;K.act=K.fl=0;
- const L=keys.ArrowLeft||keys.KeyA||K.jx<-.25,R=keys.ArrowRight||keys.KeyD||K.jx>.25,run=keys.ShiftLeft||keys.ShiftRight||Math.abs(K.jx)>.85,J=keys.Space||keys.ArrowUp||keys.KeyW||K.j;
+ const L=keys.ArrowLeft||keys.KeyA||K.l,R=keys.ArrowRight||keys.KeyD||K.r,run=keys.ShiftLeft||keys.ShiftRight,J=keys.Space||keys.ArrowUp||keys.KeyW||K.j;
  const gr=p.body.blocked.down;let mv=0;
- if(!s.lock&&!s.dead){mv=R?1:L?-1:0;p.setVelocityX(mv*(run?150:90));if(mv){s.dir=mv;p.setFlipX(mv<0)}
-  if(J&&gr){p.setVelocityY(-430);A.jump()}if(fl){s.on=!s.on;A.t(900,.05,'square',.05)}if(act){if(S.lv<4)s.interact();else if(S.lv==5&&p.x>530)s.exitWC()}
+ if(!s.lock&&!s.dead){mv=R?1:L?-1:0;p.setVelocityX(mv*(COARSE?125:run?150:90));if(mv){s.dir=mv;p.setFlipX(mv<0)}
+  if(J&&gr){p.setVelocityY(-430);A.jump()}if(fl){s.on=!s.on;A.t(900,.05,'square',.05)}if(act){if(S.lv<4)s.interact();else if(S.lv==5&&p.x>530*FX)s.exitWC()}
   if(mv&&gr&&t>s.ft){A.step();s.ft=t+(run?200:320)}}else p.setVelocityX(0);
  p.anims.play(t<s.ia?'act':!gr?'jump':mv?'walk':'idle',true);
- const cam=s.cameras.main;s.dust.forEach(q=>{const v=q.getData('v');q.x+=v[0]*dt;q.y+=v[1]*dt;if(q.x<cam.scrollX)q.x+=640;if(q.x>cam.scrollX+640)q.x-=640;if(q.y<0)q.y=340;if(q.y>345)q.y=0});
+ const cam=s.cameras.main;s.dust.forEach(q=>{const v=q.getData('v');q.x+=v[0]*dt;q.y+=v[1]*dt;if(q.x<cam.scrollX)q.x+=GW;if(q.x>cam.scrollX+GW)q.x-=GW;if(q.y<T0)q.y=345;if(q.y>345)q.y=T0});
  if(s.msgT<t)s.msg.setText('');
  if(S.lv<4)s.tick(t,dt);else s.hud.clear()}
 exitWC(){const s=this;s.lock=true;s.sand.fillStyle(0xe0b060);for(let i=0;i<14;i++)s.sand.fillRect(s.p.x-8+Math.random()*16,s.p.y+10+Math.random()*4,1,1);
  s.say('...there is desert sand inside my shoes.',6000);A.whisper();
  s.time.delayedCall(3500,()=>s.cameras.main.fade(2500,0,0,0));
  s.time.delayedCall(6200,()=>{s.cameras.main.resetFX();s.children.each(c=>c.setVisible(false));s.cameras.main.setBackgroundColor(0);
-  s.add.text(320,170,'THE END',{fontFamily:'monospace',fontSize:'28px',color:'#cfe3ff'}).setOrigin(.5).setScrollFactor(0).setResolution(2);
-  s.add.text(320,210,'tap / press any key to play again',{fontFamily:'monospace',fontSize:'10px',color:'#7a8ab0'}).setOrigin(.5).setScrollFactor(0);
+  s.add.text(GW/2,GH/2-10,'THE END',{fontFamily:'monospace',fontSize:'28px',color:'#cfe3ff'}).setOrigin(.5).setScrollFactor(0).setResolution(2);
+  s.add.text(GW/2,GH/2+30,'tap / press any key to play again',{fontFamily:'monospace',fontSize:'10px',color:'#7a8ab0'}).setOrigin(.5).setScrollFactor(0);
   const go=()=>location.reload();s.input.once('pointerdown',go);s.input.keyboard.once('keydown',go)})}}
-new Phaser.Game({type:Phaser.AUTO,parent:'game',width:640,height:360,backgroundColor:'#000',pixelArt:true,
+new Phaser.Game({type:Phaser.AUTO,parent:'game',width:GW,height:GH,backgroundColor:'#000',pixelArt:true,
  scale:{mode:Phaser.Scale.FIT,autoCenter:Phaser.Scale.CENTER_BOTH},physics:{default:'arcade',arcade:{gravity:{y:800}}},scene:Main});
